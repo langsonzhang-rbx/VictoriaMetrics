@@ -1,0 +1,4 @@
+ef200241b71fcf1ab58ada7ce533407ae7406c9c31f874a7563079bc262ce085  victoria-metrics-windows-amd64-heads-langsonzhang-cardinalityestimator-cluster-0-g30aac0355.zip
+b05cfd86fa08df77de8ddc63d17e3e719446e7ea861c87577caf46146895fab7  vminsert-windows-amd64-prod.exe
+9d4082cf63e89dd47fe3fdb9bdbe3e12a6a14fb6700ac3f3137a65f1f5b548e5  vmselect-windows-amd64-prod.exe
+a2ce37fca96712c14991d91ee0adb473ffa5df492c4d85c74f70371f48b7ff1f  vmstorage-windows-amd64-prod.exe
