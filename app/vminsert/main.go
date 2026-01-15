@@ -31,6 +31,7 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/app/vminsert/vmimport"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/auth"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/buildinfo"
+	"github.com/VictoriaMetrics/VictoriaMetrics/lib/ce"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/envflag"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/flagutil"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/fs"
@@ -98,6 +99,8 @@ func main() {
 	envflag.Parse()
 	buildinfo.Init()
 	logger.Init()
+
+	ce.InitDefaultCardinalityEstimator()
 
 	logger.Infof("initializing netstorage for storageNodes %s...", *storageNodes)
 	startTime := time.Now()
@@ -190,6 +193,11 @@ func main() {
 	relabel.Stop()
 
 	fs.MustStopDirRemover()
+
+	logger.Infof("shutting down cardinality estimator...")
+	startTime = time.Now()
+	ce.MustStopDefaultCardinalityEstimator()
+	logger.Infof("successfully stopped cardinality estimator in %.3f seconds", time.Since(startTime).Seconds())
 
 	logger.Infof("the vminsert has been stopped")
 }
@@ -393,6 +401,18 @@ func requestHandler(w http.ResponseWriter, r *http.Request) bool {
 	case "/-/reload":
 		procutil.SelfSIGHUP()
 		w.WriteHeader(http.StatusNoContent)
+		return true
+	case "ce/binary":
+		ce.HandleCeGetBinary(w, r)
+		return true
+	case "ce/configure":
+		ce.HandleUpdateCeResetSchedule(w, r)
+		return true
+	case "ce/estimate":
+		ce.HandleCeGetCardinality(w, r)
+		return true
+	case "ce/reset":
+		ce.HandleCeReset(w, r)
 		return true
 	default:
 		// This is not our link

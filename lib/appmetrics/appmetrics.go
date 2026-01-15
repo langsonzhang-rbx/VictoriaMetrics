@@ -12,6 +12,7 @@ import (
 
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/buildinfo"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/bytesutil"
+	"github.com/VictoriaMetrics/VictoriaMetrics/lib/ce"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/cgroup"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/flagutil"
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/memory"
@@ -87,6 +88,11 @@ func writePrometheusMetrics(w io.Writer) {
 		}
 		fmt.Fprintf(w, "flag{name=%q, value=%q, is_set=%q} 1\n", f.Name, value, isSet)
 	})
+
+	// Export cardinality estimator metrics
+	if *ce.EstimatorDefaultEnabled {
+		ce.DefaultCardinalityMetricEmitter.WritePrometheus(w)
+	}
 }
 
 var startTime = time.Now()

@@ -1,9 +1,15 @@
 package prompb
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/VictoriaMetrics/easyproto"
+)
+
+var (
+	CardinalityEstimatorFixedLabel1 = flag.String("ce.fixedLabel1", "job", "First fixed label for cardinality estimator.")
+	CardinalityEstimatorFixedLabel2 = flag.String("ce.fixedLabel2", "region", "Second fixed label for cardinality estimator.")
 )
 
 // WriteRequest represents Prometheus remote write API request.
@@ -40,6 +46,12 @@ type TimeSeries struct {
 
 	// Samples is a list of samples for the given TimeSeries
 	Samples []Sample
+
+	// Reserved for cardinality estimator
+	MetricName       string
+	FixedLabelValue1 string // First fixed label value for estimations, something like job. Precalculated for later use.
+	FixedLabelValue2 string // Second fixed label value for estimations, something like region. Precalculated for later use.
+	ShardIdx         int    // Reserved for later use.
 }
 
 // Sample is a timeseries sample.
@@ -168,6 +180,19 @@ func (ts *TimeSeries) unmarshalProtobuf(src []byte, labelsPool []Label, samplesP
 	}
 	ts.Labels = labelsPool[labelsPoolLen:]
 	ts.Samples = samplesPool[samplesPoolLen:]
+
+	// Calculate cardinality estimator metadata.
+	for _, label := range ts.Labels {
+		switch label.Name {
+		case "__name__":
+			ts.MetricName = label.Value
+		case *CardinalityEstimatorFixedLabel1:
+			ts.FixedLabelValue1 = label.Value
+		case *CardinalityEstimatorFixedLabel2:
+			ts.FixedLabelValue2 = label.Value
+		}
+	}
+
 	return labelsPool, samplesPool, nil
 }
 
