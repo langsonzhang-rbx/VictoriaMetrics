@@ -28,7 +28,10 @@ func Test_HLLAccuracy(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for i := range numGoroutines {
-		wg.Go(func() {
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+
 			start := i * chunkSize
 			end := min(start+chunkSize, numInstances)
 
@@ -40,7 +43,7 @@ func Test_HLLAccuracy(t *testing.T) {
 			if err != nil {
 				t.Errorf("Failed to insert data: %v", err)
 			}
-		})
+		}()
 	}
 
 	wg.Wait()
